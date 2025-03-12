@@ -42,6 +42,12 @@
             color: red;
             font-size: 14px;
         }
+        #loading {
+            display: none;
+            font-size: 16px;
+            color: #28a745;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -60,6 +66,7 @@
             <button type="button" class="btn btn-primary mt-3" onclick="predictSpecies()">Predict</button>
         </form>
 
+        <p id="loading">⏳ Predicting species, please wait...</p>
         <p id="result"></p>
         <p class="error" id="error"></p>
     </div>
@@ -70,6 +77,7 @@
             // Clear previous messages
             document.getElementById('result').innerText = "";
             document.getElementById('error').innerText = "";
+            document.getElementById('loading').style.display = "block"; // Show loading indicator
 
             // Collect input values
             let features = [
@@ -83,27 +91,30 @@
 
             // Validate inputs
             if (features.some(isNaN)) {
-                document.getElementById('error').innerText = "Please enter valid numbers for all fields.";
+                document.getElementById('loading').style.display = "none";
+                document.getElementById('error').innerText = "⚠️ Please enter valid numbers for all fields.";
                 return;
             }
 
             // Send data to Flask API
-            fetch("http://127.0.0.1:5000/predict", {  // Change to Heroku URL after deployment
+            fetch("https://fish-predictor-app-bbcee722850e.herokuapp.com/predict", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ features: features })
             })
             .then(response => response.json())
             .then(data => {
+                document.getElementById('loading').style.display = "none"; // Hide loading indicator
                 if (data.species) {
-                    document.getElementById('result').innerText = "Predicted Species: " + data.species;
+                    document.getElementById('result').innerText = "✅ Predicted Species: " + data.species;
                 } else {
-                    document.getElementById('error').innerText = "Error: " + data.error;
+                    document.getElementById('error').innerText = "❌ Error: " + (data.error || "Unexpected error");
                 }
             })
             .catch(error => {
+                document.getElementById('loading').style.display = "none";
                 console.error('Error:', error);
-                document.getElementById('error').innerText = "Failed to connect to server.";
+                document.getElementById('error').innerText = "⚠️ Failed to connect to server. Please try again.";
             });
         }
     </script>
